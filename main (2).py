@@ -4,20 +4,7 @@ import matplotlib.pyplot as plt # Import matplotlib for charts
 import numpy as np
 from matplotlib.backends.backend_pdf import PdfPages
 
-MONTH_NAMES = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December"
-]
+from constants import MONTH_NAMES, REPORT_MODES
 
 DATA_DIR = Path("data")    # Path to the folder containing CSV files
 
@@ -163,7 +150,7 @@ def menu_select(options: list[str]) -> int:
 def read_report_mode():
     '''Read selected report mode from the user.'''  # Read which type of report the user wants
 
-    options = ["Compare years", "Compare stations", "Rainfall histogram", "Rainfall vs temperature"]  # Create list of report mode options
+    options = REPORT_MODES
     
     print("Select report mode:")  # Display message for the user
 
