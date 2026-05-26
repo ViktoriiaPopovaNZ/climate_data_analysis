@@ -6,25 +6,25 @@ from constants import (
     REPORT_MODES
 )
 
-from exporters import (
+from src.output.exporters import (
     export_comparison_report_to_csv,
     export_report_to_pdf
 )
 
-from charts import (
+from src.output.charts import (
     plot_year_comparison_chart,
     plot_station_comparison_chart,
     plot_rainfall_histogram,
     plot_rainfall_temperature_scatter
 )
 
-from rainfall_statistics import (
+from src.analyze.rainfall_statistics import (
     print_summary_statistics,
     print_temperature_correlation,
     get_summary_statistics_lines
 )
 
-from rainfall_data import (
+from src.data.rainfall_data import (
     extract_year_from_filename,
     read_csv_data,
     extract_year_and_month,
@@ -178,6 +178,100 @@ def read_temperature_station(stations: list[tuple]):
     selection = menu_select(station_options)
 
     return stations[selection]
+
+
+def year_comparison_report(rain_data: list[tuple], stations: list[tuple],
+                           years: list[int]):
+    '''Generate rainfall report comparing multiple years.'''
+
+    selected_years = read_years(years)
+    print("\nSelect one station or All stations for year comparison.")
+    station_number, station_name = read_one_station(stations)
+
+    selected_months = read_months()
+    selected_month_names = []
+
+    for month in selected_months:
+        selected_month_names.append(MONTH_NAMES[month - 1])
+
+    report_lines = []  # Store text for PDF export
+    report_lines.append("Rainfall Year Comparison Report")
+    report_lines.append("")
+    report_lines.append(f"Station: {station_name}")  # Add station name
+    report_lines.append(f"Years: {selected_years}")  # Add selected years
+
+    report_lines.append("Months:")  # Add months heading
+
+    for month_name in selected_month_names:  # Loop through month names
+        report_lines.append(f"- {month_name}")  # Add one month per line
+
+    report_lines.append("")  # Add empty line
+
+    all_year_totals = []
+
+    for year in selected_years:
+        month_totals = []
+
+        heading = f"Monthly Rain Total: {year} - {station_name}"
+        print(f"\n{heading}")
+        report_lines.append(heading)
+
+        for month in selected_months:
+            month_name = MONTH_NAMES[month - 1]
+
+            if station_name == "All stations":
+                month_data = all_stations_rain_data(month, rain_data, year)
+            else:
+                month_data = monthly_rain_data(
+                    station_number,
+                    month,
+                    rain_data,
+                    year
+                )
+
+            if len(month_data) == 0:
+                line = f"{month_name:10}No data"
+                print(line)
+                report_lines.append(line)
+                month_totals.append(0)
+            else:
+                monthly_total = sum(month_data)
+                line = f"{month_name:10}{monthly_total:5.2f} mm"
+                print(line)
+                report_lines.append(line)
+                month_totals.append(monthly_total)
+
+        print_summary_statistics(month_totals)
+
+        report_lines.append("")
+
+        report_lines.extend(
+            get_summary_statistics_lines(month_totals)
+        )
+
+        report_lines.append("")
+        all_year_totals.append(month_totals)
+
+    export_comparison_report_to_csv(
+        selected_month_names,
+        selected_years,
+        all_year_totals,
+        "year_comparison_report"
+    )
+
+    figure = plot_year_comparison_chart(
+        all_year_totals,
+        selected_years,
+        station_name,
+        selected_month_names
+    )
+
+    export_report_to_pdf(
+        report_lines,
+        "year_comparison_report.pdf",
+        figure
+    )
+    
 
 
 def read_multiple_stations(stations: list[tuple]):
@@ -512,6 +606,22 @@ def rainfall_vs_temperature_report(rain_data: list[tuple],
         figure
     )
     
+def rain_report(rain_data: list[tuple], stations: list[tuple],
+                years: list[int], report_mode: int):
+    '''Generate a rainfall report based on selected report mode.'''
+
+    if report_mode == 0:
+        year_comparison_report(rain_data, stations, years)
+
+    elif report_mode == 1:
+        station_comparison_report(rain_data, stations, years)
+
+    elif report_mode == 2:
+        rainfall_histogram_report(rain_data, stations, years)
+
+    else:
+        rainfall_vs_temperature_report(rain_data, stations, years)
+
 
 def main():
     '''Run the rainfall report program.'''
