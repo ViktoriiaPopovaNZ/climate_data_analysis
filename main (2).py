@@ -4,9 +4,12 @@ import matplotlib.pyplot as plt # Import matplotlib for charts
 import numpy as np
 from matplotlib.backends.backend_pdf import PdfPages
 
-from constants import MONTH_NAMES, REPORT_MODES
-
-DATA_DIR = Path("data")    # Path to the folder containing CSV files
+from constants import (
+    DATA_DIR,
+    OUTPUT_DIR,
+    MONTH_NAMES,
+    REPORT_MODES
+)
 
 def extract_year_from_filename(file_path: Path) -> int:
     '''Extract year from a rainfall CSV filename.'''
@@ -151,7 +154,7 @@ def read_report_mode():
     '''Read selected report mode from the user.'''  # Read which type of report the user wants
 
     options = REPORT_MODES
-    
+
     print("Select report mode:")  # Display message for the user
 
     return menu_select(options)  # Use existing menu function and return selected mode
@@ -357,7 +360,7 @@ def export_comparison_report_to_csv(months: list[str], labels: list,
 
     report_df = pd.DataFrame(report_data)
 
-    filename = f"output/{report_name}.csv"
+    filename = OUTPUT_DIR / f"{report_name}.csv"
 
     report_df.to_csv(filename, index=False)
 
@@ -790,7 +793,7 @@ def export_report_to_pdf(report_lines: list[str],
                          figure=None):
     '''Export rainfall report text and optional chart to a PDF file.'''
 
-    with PdfPages(f'output/{filename}') as pdf:  # Create PDF file
+    with PdfPages(OUTPUT_DIR / filename) as pdf: # Create PDF file
 
         text_figure = plt.figure(figsize=(8.27, 11.69))  # Create A4 page
 
